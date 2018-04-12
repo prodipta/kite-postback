@@ -22,8 +22,8 @@ WantedBy=multi-user.target
 ```
 Save and exit. Then reload systemd and start the service
 ```
-systemctl daemon-reload
-systemctl start kite-postback
+sudo systemctl daemon-reload
+sudo systemctl start kite-postback
 ```
 By default the service will run on localhost at port 9000. Change these in the config file. If you are running this app from localhost, you would need to set up a reverse proxy so that the postback actually reaches the app.
 
