@@ -4,7 +4,7 @@ Created on Tue Mar 27 20:52:14 2018
 
 @author: Prodipta
 """
-
+import pandas as pd
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import json
 import logging
@@ -32,6 +32,14 @@ class PostbackHandler(BaseHTTPRequestHandler):
             self.send_error(code, msg)
         else:
             self.send_response(code, msg)
+            
+    def update_orderbook(post_data):
+        order_id = post_data['order_id']
+        timestamp = post_data['order_timestamp']
+        checksum = post_data['checksum']
+        if verify_checksum(order_id,timestamp,checksum,SECRET_KEY):
+            logger.info('user id is'+post_data['user_id']+'...\n')
+            writer.upsert(post_data)
 
     def do_POST(self):
         msg = "Success"
@@ -41,14 +49,18 @@ class PostbackHandler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         try:
             post_data = json.loads(post_data)
-            if not isinstance(post_data,dict):
+            if isinstance(post_data,list):
+                timestamps = [pd.Timestamp(d['order_timestamp']) for d in post_data]
+                sorted_index = sorted(range(len(timestamps)), key=lambda k: timestamps[k])
+                for i in range(len(timestamps)):
+                    self.update_orderbook(post_data[sorted_index[i]])
+            elif isinstance(post_data,dict):
+                self.update_orderbook(post_data)
+            else:
+                with open("postback.txt","a") as outfile:
+                    outfile.write("unknown data type {}".format(post_data))
                 raise TypeError("expect a dict")
-            order_id = post_data['order_id']
-            timestamp = post_data['order_timestamp']
-            checksum = post_data['checksum']
-            if verify_checksum(order_id,timestamp,checksum,SECRET_KEY):
-                logger.info('user id is'+post_data['user_id']+'...\n')
-                writer.upsert(post_data)
+            
         except:
             pass
         
