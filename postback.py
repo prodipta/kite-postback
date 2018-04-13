@@ -33,7 +33,7 @@ class PostbackHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(code, msg)
             
-    def update_orderbook(post_data):
+    def update_orderbook(self, post_data):
         order_id = post_data['order_id']
         timestamp = post_data['order_timestamp']
         checksum = post_data['checksum']
